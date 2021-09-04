@@ -7,6 +7,7 @@ import com.patronus.harrypotternaoreativo.Entity.Personagem;
 import com.patronus.harrypotternaoreativo.Repository.PersonagemRepository;
 import com.patronus.harrypotternaoreativo.Request.PersonagemRequest;
 import com.patronus.harrypotternaoreativo.Response.PersonagemResponse;
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +16,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -28,8 +28,7 @@ public class PersonagemService {
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> resposta = restTemplate.getForEntity(url, String.class);
         Gson gson = new Gson();
-        SorteioDoChapeu sorteioDoChapeu = gson.fromJson(resposta.getBody(), SorteioDoChapeu.class);
-        return sorteioDoChapeu;
+        return gson.fromJson(resposta.getBody(), SorteioDoChapeu.class);
     }
 
     public Single<PersonagemResponse> executarGravacao(PersonagemRequest personagemRequest) {
@@ -46,7 +45,7 @@ public class PersonagemService {
 
     public Single<PersonagemResponse> executarConsulta(String nome) {
         return Single.create(single -> {
-          Personagem personagem = personagemRepository.findByName(nome);
+          Personagem personagem = personagemRepository.findByNome(nome);
           Casa casa = retornaDetalhesCasaAtribuida(personagem);
           single.onSuccess(new PersonagemResponse(personagem, casa));
         });
@@ -59,17 +58,20 @@ public class PersonagemService {
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> resposta = restTemplate.getForEntity(url, String.class);
         Gson gson = new Gson();
-        Casa casa = gson.fromJson(resposta.getBody(), Casa.class);
-        return casa;
+        return gson.fromJson(resposta.getBody(), Casa.class);
     }
 
-    public Single listarTodos() {
+    public Observable<PersonagemResponse> listarTodos() {
 
-        Single single = Single.create(emitter -> {
-            emitter.onSuccess(
-            personagemRepository.findAll().stream().map(this::converterUnitario).collect(Collectors.toList()));
-        });
-        return single;
+        return Observable.fromIterable(personagemRepository.findAll()).map(this::converterUnitario);
+
+// Só estou deixando este código comentado aqui para efeito de estudo futuro.
+// O mesmo foi refatorado na aula do dia 03/09 pelo Matheus, consultar o 1/4 do video da aula.
+//        Single single = Single.create(emitter -> {
+//            emitter.onSuccess(
+//            personagemRepository.findAll().stream().map(this::converterUnitario).collect(Collectors.toList()));
+//        });
+//        return single.toObservable();
 
     }
 

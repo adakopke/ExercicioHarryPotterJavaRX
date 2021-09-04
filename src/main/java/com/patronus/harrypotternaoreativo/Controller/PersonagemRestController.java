@@ -29,12 +29,14 @@ public class PersonagemRestController {
     }
 
     @GetMapping("{nome}")
+    @ResponseStatus(HttpStatus.OK)
     public Single<PersonagemResponse> consultarPersonagem(@PathVariable String nome) {
         return personagemService.executarConsulta(nome);
     }
 
     @GetMapping("todos")
-    public Single<PersonagemResponse> listarTodos() {
+    @ResponseStatus(HttpStatus.OK)
+    public Observable<PersonagemResponse> listarTodos() {
         return personagemService.listarTodos();
 
     }
